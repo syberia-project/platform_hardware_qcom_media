@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------------
-Copyright (c) 2010-2017, The Linux Foundation. All rights reserved.
+Copyright (c) 2010-2018, The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -555,7 +555,12 @@ OMX_ERRORTYPE omx_venc::component_init(OMX_STRING role)
 
     OMX_INIT_STRUCT(&m_sParamLTRCount, QOMX_VIDEO_PARAM_LTRCOUNT_TYPE);
     m_sParamLTRCount.nPortIndex = (OMX_U32) PORT_INDEX_OUT;
+
+#ifdef LTR_SUPPORT
+    m_sParamLTRCount.nCount = 3; //Non zero count indicated LTR feature support
+#else
     m_sParamLTRCount.nCount = 0;
+#endif
 
     OMX_INIT_STRUCT(&m_sConfigDeinterlace, OMX_VIDEO_CONFIG_DEINTERLACE);
     m_sConfigDeinterlace.nPortIndex = (OMX_U32) PORT_INDEX_OUT;
@@ -2372,7 +2377,10 @@ OMX_ERRORTYPE  omx_venc::set_config(OMX_IN OMX_HANDLETYPE      hComp,
 
                 return set_vendor_extension_config(ext);
             }
-
+        case OMX_IndexConfigVideoNalSize:
+            {
+                return OMX_ErrorUnsupportedIndex;
+            }
         default:
             DEBUG_PRINT_ERROR("ERROR: unsupported index %d", (int) configIndex);
             break;
