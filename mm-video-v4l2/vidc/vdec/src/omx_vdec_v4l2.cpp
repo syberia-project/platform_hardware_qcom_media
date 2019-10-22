@@ -12573,7 +12573,7 @@ OMX_BUFFERHEADERTYPE* omx_vdec::allocate_color_convert_buf::get_il_buf_hdr
 OMX_ERRORTYPE omx_vdec::allocate_color_convert_buf::set_buffer_req(
         OMX_U32 buffer_size, OMX_U32 actual_count)
 {
-    OMX_U32 expectedSize = enabled ? buffer_size_req : omx->dynamic_buf_mode ?
+    OMX_U32 expectedSize = is_color_conversion_enabled() ? buffer_size_req : omx->dynamic_buf_mode ?
             sizeof(struct VideoDecoderOutputMetaData) : omx->drv_ctx.op_buf.buffer_size;
     if (buffer_size < expectedSize) {
         DEBUG_PRINT_ERROR("OP Requirements: Client size(%u) insufficient v/s requested(%u)",
