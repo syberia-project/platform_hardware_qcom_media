@@ -7686,6 +7686,15 @@ OMX_ERRORTYPE  omx_vdec::fill_this_buffer(OMX_IN OMX_HANDLETYPE  hComp,
         buffer = m_intermediate_out_mem_ptr + nPortIndex;
         buffer->nAllocLen = drv_ctx.op_buf.buffer_size;
     }
+    if (client_buffers.is_color_conversion_enabled()) {
+        buffer = m_intermediate_out_mem_ptr + nPortIndex;
+        buffer->nAllocLen = drv_ctx.op_buf.buffer_size;
+    }
+
+    //buffer->nAllocLen will be sizeof(struct VideoDecoderOutputMetaData). Overwrite
+    //this with a more sane size so that we don't compensate in rest of code
+    //We'll restore this size later on, so that it's transparent to client
+    buffer->nFilledLen = 0;
 
     //buffer->nAllocLen will be sizeof(struct VideoDecoderOutputMetaData). Overwrite
     //this with a more sane size so that we don't compensate in rest of code
@@ -10145,6 +10154,15 @@ OMX_ERRORTYPE omx_vdec::update_portdef(OMX_PARAM_PORTDEFINITIONTYPE *portDefn)
     portDefn->eDomain    = OMX_PortDomainVideo;
     memset(&fmt, 0x0, sizeof(struct v4l2_format));
     if (0 == portDefn->nPortIndex) {
+        int ret = 0;
+        fmt.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+        fmt.fmt.pix_mp.pixelformat = output_capability;
+        ret = ioctl(drv_ctx.video_driver_fd, VIDIOC_G_FMT, &fmt);
+        if (ret) {
+            DEBUG_PRINT_ERROR("Get Resolution failed");
+            return OMX_ErrorHardware;
+        }
+        drv_ctx.ip_buf.buffer_size = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
         portDefn->eDir =  OMX_DirInput;
         portDefn->nBufferCountActual = drv_ctx.ip_buf.actualcount;
         portDefn->nBufferCountMin    = drv_ctx.ip_buf.mincount;
@@ -10156,10 +10174,6 @@ OMX_ERRORTYPE omx_vdec::update_portdef(OMX_PARAM_PORTDEFINITIONTYPE *portDefn)
         portDefn->format.video.xFramerate = m_fps_received;
         portDefn->bEnabled   = m_inp_bEnabled;
         portDefn->bPopulated = m_inp_bPopulated;
-
-        fmt.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
-        fmt.fmt.pix_mp.pixelformat = output_capability;
-        ioctl(drv_ctx.video_driver_fd, VIDIOC_G_FMT, &fmt);
     } else if (1 == portDefn->nPortIndex) {
         unsigned int buf_size = 0;
         int ret = 0;
