@@ -12562,7 +12562,7 @@ OMX_BUFFERHEADERTYPE* omx_vdec::allocate_color_convert_buf::get_il_buf_hdr
     bool status = true;
     pthread_mutex_lock(&omx->c_lock);
      /* Whenever port mode is set to kPortModeDynamicANWBuffer, Video Frameworks
-        always uses VideoNativeMetadata and OMX receives buffer type as
+        always uses VideoNativeMetadata and OMX recives buffer type as
         grallocsource via storeMetaDataInBuffers_l API. The buffer_size
         will be communicated to frameworks via IndexParamPortdefinition. */
     if (!enabled)
